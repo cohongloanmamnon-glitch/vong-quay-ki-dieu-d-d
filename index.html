@@ -18,11 +18,7 @@
 }
 
 * { 
-  box-sizing: border-box; 
-  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
-}
-
-html, body, button, input, div, p, h1, h2, span, strong {
+  box-sizing: border-box !important; 
   font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
 }
 
@@ -69,7 +65,6 @@ button { cursor: pointer; touch-action: manipulation; }
 .wheel-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; overflow: hidden; }
 .instruction { background: var(--red); color: #fff; border-radius: 17px; padding: 9px 15px; font-weight: 900; text-align: center; font-size: clamp(15px, 1.8vw, 21px); width: min(720px, 94%); margin-bottom: 10px; box-shadow: 0 4px 0 #a92236;}
 
-/* Cập nhật lại hình nền cho vòng quay đảm bảo cắt viền tròn trịa */
 .wheel-area { position: relative; width: min(69vh, 70vw, 610px); height: min(69vh, 70vw, 610px); aspect-ratio: 1; margin: 8px auto 0; display: flex; align-items: center; justify-content: center; }
 .wheel { 
   position: absolute; inset: 0; width: 100%; height: 100%; 
@@ -208,12 +203,16 @@ button { cursor: pointer; touch-action: manipulation; }
 </div>
 
 <script>
-// --- LIÊN KẾT ÂM THANH MỚI NHẤT ---
-// Khai báo sẵn các biến chứa tệp âm thanh
+// --- TÍCH HỢP TÀI NGUYÊN ÂM THANH MỚI ---
 const sndSpin = new Audio('quay.mp3');
 sndSpin.loop = true; 
-const sndCorrect = new Audio('true.m4a'); // Phát khi trẻ làm đúng
-const sndWrong = new Audio('sai.m4a');    // Phát khi trẻ làm sai
+const sndCorrect = new Audio('true.m4a');
+const sndWrong = new Audio('sai.m4a');   
+
+// 3 file ghi âm câu hỏi thay thế cho AI
+const sndQ_General = new Audio('d-hay-d.mp3');
+const sndQ_D = new Audio('the-d.mp3');
+const sndQ_Đ = new Audio('the-đ.mp3');
 
 const TARGET_LETTERS = ['d', 'đ', 'D', 'Đ'];
 const WHEEL_SLICES = 8;
@@ -241,53 +240,16 @@ let totalTargetsInTurn = 0;
 let targetsFoundInTurn = 0;
 let isTurnFailed = false;
 
-// --- TÌM GIỌNG CÔ GIÁO VIỆT NAM (DÙNG CHO FALLBACK) ---
-let preferredVoice = null;
-function initVoice() {
-  const voices = window.speechSynthesis.getVoices();
-  const viVoices = voices.filter(v => v.lang.includes('vi'));
-  preferredVoice = viVoices.find(v => v.name.includes('Google') || v.name.includes('Female') || v.name.includes('HoaiMy')) || viVoices[0];
-}
-if (speechSynthesis.onvoiceschanged !== undefined) {
-  speechSynthesis.onvoiceschanged = initVoice;
-}
-
-// --- MODULE PHÁT ÂM THANH THÔNG MINH (ADAPTIVE AUDIO) ---
-function speak(text) {
-  if (!soundEnabled || !('speechSynthesis' in window)) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'vi-VN';
-  if (preferredVoice) u.voice = preferredVoice;
-  u.rate = 0.85;  
-  u.pitch = 1.15; 
-  window.speechSynthesis.speak(u);
-}
-
-// Phát âm thanh file ghi âm đúng. Nếu lỗi file thì tự động dùng giọng AI
-function playCorrectSound() {
-    if(!soundEnabled) return;
-    sndCorrect.currentTime = 0;
-    let playPromise = sndCorrect.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(error => {
-            console.log("File true.m4a không tìm thấy. Dùng giọng AI thay thế.");
-            speak('Bé giỏi quá!');
-        });
-    }
-}
-
-// Phát âm thanh file ghi âm sai. Nếu lỗi file thì tự động dùng giọng AI
-function playWrongSound() {
-    if(!soundEnabled) return;
-    sndWrong.currentTime = 0;
-    let playPromise = sndWrong.play();
-    if (playPromise !== undefined) {
-        playPromise.catch(error => {
-            console.log("File sai.m4a không tìm thấy. Dùng giọng AI thay thế.");
-            speak('Bé làm lại nhé!');
-        });
-    }
+// Hàm phát audio thuần túy
+function playAudio(audioObj) {
+    if (!soundEnabled) return;
+    sndQ_General.pause();
+    sndQ_D.pause();
+    sndQ_Đ.pause();
+    audioObj.currentTime = 0;
+    audioObj.play().catch(e => {
+        console.log("Không tìm thấy file âm thanh.");
+    });
 }
 
 function getImage(key) {
@@ -301,23 +263,21 @@ function showScreen(screenId) {
   document.getElementById(screenId).classList.add('active');
 }
 
-// AUDIO UNLOCK: CẤP QUYỀN ÂM THANH CHO iOS KHI VỪA VÀO TRÒ CHƠI
-document.getElementById('startBtn').addEventListener('click', () => {
-  if (soundEnabled) {
-      sndCorrect.play().then(() => sndCorrect.pause()).catch(e=>{});
-      sndWrong.play().then(() => sndWrong.pause()).catch(e=>{});
-      sndSpin.play().then(() => sndSpin.pause()).catch(e=>{});
-      if ('speechSynthesis' in window) {
-          window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
-      }
+// Cấp quyền âm thanh iOS
+document.body.addEventListener('click', () => {
+  if (soundEnabled && playedKeys.length === 0 && score === 0 && !isSpinning) {
+      [sndCorrect, sndWrong, sndSpin, sndQ_General, sndQ_D, sndQ_Đ].forEach(a => {
+          a.play().then(() => a.pause()).catch(e=>{});
+      });
   }
+}, {once: true});
 
+document.getElementById('startBtn').addEventListener('click', () => {
   score = 0;
   playedKeys = [];
   document.getElementById('score').textContent = score;
   showScreen('gameScreen');
-  initVoice();
-  speak("Chúng mình cùng quay vòng quay để tìm chữ dờ và đờ nhé!");
+  playAudio(sndQ_General); // Phát file d-hay-d.mp3
 });
 
 const spinBtn = document.getElementById('spinBtn');
@@ -327,7 +287,6 @@ spinBtn.addEventListener('click', () => {
   if (isSpinning) return;
   
   if (soundEnabled) {
-      if('speechSynthesis' in window) window.speechSynthesis.resume();
       sndSpin.currentTime = 0;
       sndSpin.play().catch(e => console.log("Trình duyệt chặn autoplay nhạc vòng quay"));
   }
@@ -347,13 +306,12 @@ spinBtn.addEventListener('click', () => {
   document.getElementById('picture').innerHTML = `<div class="missing">đang quay...</div>`;
   document.getElementById('wordTitle').textContent = '...';
   document.getElementById('letters').innerHTML = '';
-  document.getElementById('letters').classList.remove('disabled-events'); // Mở khóa khu vực chữ
+  document.getElementById('letters').classList.remove('disabled-events');
   document.getElementById('prompt').textContent = 'Vòng quay đang chạy, cùng chờ xem nhé!';
 
   let chosenItem = unplayedWords[Math.floor(Math.random() * unplayedWords.length)];
   let targetIndex = chosenItem.id;
 
-  // TÍNH GÓC QUAY CÓ BÙ TRỪ ĐỂ KIM LUÔN CHỈ VÀO TÂM
   const sliceAngle = 360 / WHEEL_SLICES;
   const targetAngle = 360 - (targetIndex * sliceAngle + (sliceAngle / 2)); 
   const extraSpins = 5 * 360;
@@ -364,7 +322,7 @@ spinBtn.addEventListener('click', () => {
   setTimeout(() => {
     isSpinning = false;
     spinBtn.disabled = false;
-    sndSpin.pause(); // Dừng nhạc quay
+    sndSpin.pause();
     setupChallenge(chosenItem);
   }, 4500);
 });
@@ -384,7 +342,7 @@ function setupChallenge(item) {
   const chars = Array.from(item.word);
   totalTargetsInTurn = chars.filter(c => TARGET_LETTERS.includes(c.toLowerCase())).length;
   targetsFoundInTurn = 0;
-  isTurnFailed = false; // Đặt lại cờ lỗi mỗi khi bắt đầu câu mới
+  isTurnFailed = false;
 
   chars.forEach((char) => {
     const btn = document.createElement('button');
@@ -398,7 +356,14 @@ function setupChallenge(item) {
     lettersDiv.appendChild(btn);
   });
 
-  speak(`Bé hãy tìm chữ dờ hoặc đờ trong từ ${item.name}`);
+  // Tự động phân loại từ để gọi đúng file âm thanh cô giáo
+  if (item.word.includes('d')) {
+      playAudio(sndQ_D);
+  } else if (item.word.includes('đ')) {
+      playAudio(sndQ_Đ);
+  } else {
+      playAudio(sndQ_General);
+  }
 }
 
 function handleLetterClick(btn, char) {
@@ -413,21 +378,19 @@ function handleLetterClick(btn, char) {
     if (targetsFoundInTurn < totalTargetsInTurn) {
       fb.textContent = 'Giỏi quá! Hình như vẫn còn chữ nữa, con tìm tiếp nhé!';
       fb.className = 'feedback good';
-      playCorrectSound(); // Chạy âm thanh đúng (fallback nếu không có m4a)
+      playAudio(sndCorrect); 
     } else {
-      // HOÀN THÀNH TỐT
       score++;
       document.getElementById('score').textContent = score;
       
       fb.textContent = 'Hoàn hảo! Con đã tìm đúng chữ d và đ trong từ này!';
       fb.className = 'feedback good';
       
-      playCorrectSound(); 
+      playAudio(sndCorrect); 
       document.getElementById('letters').classList.add('disabled-events');
       showNextButtonCheck();
     }
   } else {
-    // LUẬT MỚI: SAI LÀ MẤT ĐIỂM, KHÓA BẢNG CHỮ CÁI, VÀ HIỆN NÚT CHUYỂN CÂU
     btn.classList.add('wrong');
     isTurnFailed = true; 
     
@@ -435,8 +398,7 @@ function handleLetterClick(btn, char) {
     fb.textContent = 'Ồ, sai rồi! Con không được cộng điểm ở câu này. Bấm quay tiếp nhé.';
     fb.className = 'feedback help';
     
-    playWrongSound(); 
-    
+    playAudio(sndWrong); 
     document.getElementById('letters').classList.add('disabled-events');
     showNextButtonCheck();
   }
@@ -473,7 +435,6 @@ function endGame() {
   const flowersDiv = document.getElementById('flowers');
   flowersDiv.innerHTML = '';
   
-  // TẠO EMOJI HOA THEO ĐIỂM SỐ ĐẠT ĐƯỢC
   let displayScore = score > 8 ? 8 : score; 
   for (let i = 0; i < displayScore; i++) {
     const fl = document.createElement('div');
@@ -483,11 +444,8 @@ function endGame() {
     flowersDiv.appendChild(fl);
   }
   
-  if (score >= 6) {
-      speak(`Tuyệt vời! Bé xuất sắc giành được ${score} bông hoa!`);
-  } else {
-      speak(`Bé đạt được ${score} bông hoa. Lần sau cố gắng cẩn thận hơn nhé!`);
-  }
+  // Phát một âm thanh chiến thắng
+  playAudio(sndQ_General); 
 }
 
 document.getElementById('restartBtn').addEventListener('click', () => {
@@ -502,13 +460,10 @@ soundBtn.addEventListener('click', () => {
   soundEnabled = !soundEnabled;
   soundBtn.textContent = soundEnabled ? 'Giọng cô & Âm thanh: BẬT' : 'Giọng cô & Âm thanh: TẮT';
   if (!soundEnabled) {
-      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-      sndSpin.pause();
+      [sndSpin, sndQ_General, sndQ_D, sndQ_Đ].forEach(a => a.pause());
   }
 });
 
-// Khởi chạy
-initVoice();
 </script>
 </body>
 </html>

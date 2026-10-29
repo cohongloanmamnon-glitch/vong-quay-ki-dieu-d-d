@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Vòng quay kỳ diệu – Bé nhận biết chữ d và đ – Chuẩn tiết dạy 5 tuổi</title>
+
+<!-- Nhúng font Be Vietnam Pro từ Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --red: #e84b5f; --yellow: #ffd65a; --green: #2fa45a; --blue: #5b9eea; 
+  --brown: #5b3b18; --cream: #fff9e9; --pink: #ffe8ee; 
+  --shadow: 0 8px 0 rgba(91,59,24,.12);
+}
+
+* { 
+  box-sizing: border-box; 
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+}
+
+html, body, button, input, div, p, h1, h2, span, strong {
+  font-family: 'Be Vietnam Pro', Arial, sans-serif !important;
+}
+
+html, body {
+  margin: 0; 
+  width: 100%; 
+  min-height: 100%; 
+  color: var(--brown); 
+  background: url('nen.png') no-repeat center center fixed; 
+  background-size: cover; 
+  background-color: #fff5c9;
+  touch-action: manipulation; 
+  overflow: auto;
+}
+
+button, input { font: inherit; }
+button { cursor: pointer; touch-action: manipulation; }
+.hidden { display: none !important; }
+.disabled-events { pointer-events: none; opacity: 0.8; }
+
+.app { min-height: 100vh; padding: 10px; display: flex; flex-direction: column; gap: 10px; }
+.top { background: #fff; border: 4px solid var(--yellow); border-radius: 24px; box-shadow: var(--shadow); padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.brand h1 { margin: 0; color: var(--red); font-size: clamp(23px, 3.1vw, 40px); line-height: 1.05; text-transform: lowercase; }
+.brand p { margin: 4px 0 0; font-size: clamp(13px, 1.7vw, 19px); font-weight: 800; }
+.top-actions { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
+.score { padding: 8px 13px; border: 3px solid #f0bd2b; background: #fff5be; border-radius: 17px; font-weight: 900; font-size: clamp(16px, 2vw, 23px); }
+.score span { color: var(--red); }
+.top-btn { border: 3px solid #e6b62e; background: #fff8cf; border-radius: 15px; padding: 9px 12px; font-weight: 900; color: #63430e; }
+.top-btn:hover { transform: translateY(-1px); }
+
+.screen { display: none; flex: 1; min-height: calc(100vh - 110px); }
+.screen.active { display: flex; }
+
+.welcome { align-items: center; justify-content: center; padding: 12px; }
+.welcome-card { width: min(900px, 96vw); background: #fff; border: 5px solid var(--yellow); border-radius: 32px; box-shadow: 0 15px 0 rgba(91,59,24,.12); padding: clamp(20px, 4vw, 45px); text-align: center; }
+.welcome-title { font-size: clamp(30px, 5vw, 58px); color: var(--red); font-weight: 900; margin: 0 0 10px; }
+.welcome-sub { font-size: clamp(19px, 2.6vw, 30px); font-weight: 900; margin: 10px auto; max-width: 720px; }
+.target-big { display: inline-flex; width: 90px; height: 90px; align-items: center; justify-content: center; border-radius: 25px; background: #fff3bd; border: 5px solid var(--yellow); font-size: 65px; font-weight: 900; color: #8b4c0c; margin: 10px; }
+.start-btn, .next-btn, .finish-btn { border: 4px solid #fff; background: linear-gradient(#43bd70, #2c9955); color: #fff; border-radius: 20px; padding: 14px 30px; font-weight: 900; font-size: clamp(19px, 2.5vw, 28px); box-shadow: 0 7px 0 #217641; margin-top: 15px; }
+
+.game-grid { display: grid; grid-template-columns: minmax(390px, 1.1fr) minmax(360px, .9fr); gap: 12px; width: 100%; min-height: 0; }
+.card { background: transparent; border: none; border-radius: 28px; box-shadow: none; min-height: 0; }
+
+.wheel-card { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 10px; overflow: hidden; }
+.instruction { background: var(--red); color: #fff; border-radius: 17px; padding: 9px 15px; font-weight: 900; text-align: center; font-size: clamp(15px, 1.8vw, 21px); width: min(720px, 94%); margin-bottom: 10px; box-shadow: 0 4px 0 #a92236;}
+
+/* Cập nhật lại hình nền cho vòng quay đảm bảo cắt viền tròn trịa */
+.wheel-area { position: relative; width: min(69vh, 70vw, 610px); height: min(69vh, 70vw, 610px); aspect-ratio: 1; margin: 8px auto 0; display: flex; align-items: center; justify-content: center; }
+.wheel { 
+  position: absolute; inset: 0; width: 100%; height: 100%; 
+  border-radius: 50%; 
+  box-shadow: 0 14px 22px rgba(80,50,20,.3), inset 0 0 0 4px #ffd45a; 
+  transition: transform 4s cubic-bezier(.12,.74,.18,1); 
+  overflow: hidden; 
+  background: url('Vòng Quay.png') center/cover no-repeat;
+  background-color: #fff;
+}
+
+.pointer { 
+  position: absolute; z-index: 8; top: -10px; left: 50%; transform: translateX(-50%); 
+  width: 0; height: 0; 
+  border-left: 20px solid transparent; 
+  border-right: 20px solid transparent; 
+  border-top: 50px solid var(--red); 
+  border-bottom: 0; 
+  filter: drop-shadow(0 3px 2px rgba(0,0,0,.3)); 
+}
+.pointer::after { 
+  content: ""; position: absolute; left: -8px; top: -52px; 
+  width: 16px; height: 16px; border-radius: 50%; 
+  background: #ffe26b; border: 3px solid #fff; 
+}
+
+.spin { position: absolute; z-index: 10; width: clamp(90px, 12vh, 120px); height: clamp(90px, 12vh, 120px); border-radius: 50%; border: 6px solid #fff; background: linear-gradient(#ff6075, #e93450); color: #fff; font-size: clamp(17px, 2.2vw, 25px); font-weight: 900; box-shadow: 0 8px 0 #a92236, 0 13px 18px rgba(100,20,30,.28); display: flex; align-items: center; justify-content: center; text-align: center; }
+.spin:active { transform: translateY(4px); box-shadow: 0 4px 0 #a92236; }
+.spin:disabled { filter: grayscale(.45); cursor: not-allowed; }
+
+.challenge { padding: 14px; display: flex; flex-direction: column; overflow: auto; align-items: center; }
+.challenge h2 { margin: 0; text-align: center; color: var(--red); font-size: clamp(21px, 2.6vw, 32px); text-shadow: 2px 2px 0 #fff, -2px -2px 0 #fff, 2px -2px 0 #fff, -2px 2px 0 #fff;}
+.stage { text-align: center; margin: 3px 0 6px; font-size: 15px; font-weight: 900; color: #6c511f; background: rgba(255,255,255,0.7); padding: 4px 10px; border-radius: 10px;}
+.picture { width: min(300px, 54vw); height: min(220px, 28vh); margin: 5px auto 10px; border: 4px dashed var(--yellow); border-radius: 23px; background: rgba(255,255,255,0.5); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.picture img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.2));}
+.picture .missing { font-weight: 900; text-align: center; padding: 20px; color: #8a6325; font-size: 20px; text-shadow: 1px 1px 0 #fff;}
+
+.word-title { font-size: clamp(25px, 3vw, 40px); font-weight: 900; text-align: center; margin: 1px 0 10px; letter-spacing: .5px; background: rgba(255,255,255,0.8); padding: 5px 20px; border-radius: 20px; border: 3px solid var(--yellow);}
+.prompt { background: #fff4bf; border: 3px solid var(--yellow); border-radius: 16px; padding: 8px 10px; text-align: center; font-size: clamp(14px, 1.75vw, 19px); font-weight: 900; box-shadow: 0 4px 0 rgba(0,0,0,0.1);}
+.letters { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 7px; margin: 15px 0 10px; }
+.letter { min-width: 49px; height: 60px; padding: 3px 10px; border: 4px solid #e9c65c; background: #fff; border-radius: 15px; color: #54310b; font-size: clamp(25px, 3vw, 37px); font-weight: 900; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 0 rgba(160,94,4,.13); touch-action: manipulation; cursor: pointer; text-transform: lowercase; }
+.letter.space { min-width: 15px; width: 15px; border: 0; background: transparent; box-shadow: none; cursor: default; }
+.letter.correct { background: #c9f4d7; border-color: #2ca35a; color: #14783b; animation: correctPop .35s ease; }
+.letter.wrong { background: #ffdadd; border-color: #e84b5f; animation: shake .35s ease; }
+.feedback { min-height: 46px; border-radius: 16px; text-align: center; padding: 8px; font-size: clamp(14px, 1.7vw, 19px); font-weight: 900; width: 100%; max-width: 400px;}
+.feedback.good { background: #e4f8ea; color: #17723a; border: 2px solid #2ca35a;}
+.feedback.help { background: #fff2e1; color: #895a18; border: 2px solid #f0bd2b;}
+.next-btn { align-self: center; font-size: clamp(16px, 2vw, 21px); padding: 11px 22px; margin-top: 6px; }
+
+.final { align-items: center; justify-content: center; padding: 15px; }
+.final-card { width: min(850px, 96vw); background: rgba(255,255,255,0.95); border: 5px solid var(--yellow); border-radius: 32px; box-shadow: 0 15px 0 rgba(91,59,24,.12); padding: 30px; text-align: center; }
+.final-card h2 { font-size: clamp(30px, 5vw, 52px); color: var(--red); margin: 0 0 8px; }
+.flowers { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin: 15px 0; font-size: clamp(35px, 6vw, 50px); }
+.flower-emoji { animation: bounceIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) both; display:inline-block; }
+.final-score { font-size: clamp(20px, 3vw, 31px); font-weight: 900; margin-top: 10px; }
+
+@keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-7px); } 75% { transform: translateX(7px); } }
+@keyframes correctPop { 0% { transform: scale(.75); } 70% { transform: scale(1.12); } 100% { transform: scale(1); } }
+@keyframes bounceIn { 
+  0% { transform: scale(0); opacity: 0; } 
+  60% { transform: scale(1.2); opacity: 1; } 
+  100% { transform: scale(1); opacity: 1; } 
+}
+
+@media (orientation:portrait), (max-width:850px) {
+  .game-grid { grid-template-columns: 1fr; }
+  .wheel-area { width: min(88vw, 560px); height: min(88vw, 560px); }
+  .picture { height: 200px; }
+  .screen.active { min-height: auto; }
+}
+@media (max-width:560px) {
+  .top { align-items: flex-start; }
+  .brand h1 { font-size: 22px; }
+  .score { font-size: 14px; padding: 6px 9px; }
+  .letter { min-width: 43px; height: 55px; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="brand"><h1>vòng quay vui nhộn 1</h1><p>bé khám phá chữ <b>d</b> và <b>đ</b></p></div>
+  <div class="top-actions">
+    <div class="score">điểm: <span id="score">0</span>/8</div>
+    <button class="top-btn" id="soundBtn">Giọng cô & Âm thanh: BẬT</button>
+  </div>
+</header>
+
+<section class="screen welcome active" id="welcomeScreen">
+  <div class="welcome-card">
+    <h2 class="welcome-title">cùng cô tìm chữ d và đ nhé!</h2>
+    <div style="display:flex; justify-content:center;">
+      <div class="target-big">d</div>
+      <div class="target-big">đ</div>
+    </div>
+    <p class="welcome-sub">Con hãy quay vòng quay, quan sát hình và tìm đúng chữ <b>d</b> hoặc chữ <b>đ</b> trong từ nhé.</p>
+    <button class="start-btn" id="startBtn">Bắt đầu trò chơi</button>
+  </div>
+</section>
+
+<section class="screen" id="gameScreen">
+  <div class="game-grid">
+    <section class="card wheel-card">
+      <div class="instruction" id="instruction">Chạm nút “QUAY” để bắt đầu!</div>
+      <div class="wheel-area">
+        <div class="pointer" aria-hidden="true"></div>
+        <div class="wheel" id="wheel"></div>
+        <button class="spin" id="spinBtn">QUAY</button>
+      </div>
+    </section>
+    
+    <section class="card challenge">
+      <h2>nhiệm vụ của bé</h2>
+      <div class="stage" id="stageText">Bước 1: Quan sát hình</div>
+      <div class="picture" id="picture">
+        <div class="missing">🌻 sẵn sàng chưa nào?</div>
+      </div>
+      <div class="word-title" id="wordTitle">Bé bấm QUAY nhé!</div>
+      <div class="prompt" id="prompt">Vòng quay đang đợi lệnh từ đôi tay của bé.</div>
+      <div class="letters" id="letters"></div>
+      <div class="feedback" id="feedback"></div>
+      <button class="next-btn hidden" id="nextBtn">Quay tiếp</button>
+      </section>
+  </div>
+</section>
+
+<section class="screen final" id="finalScreen">
+  <div class="final-card">
+    <h2>Con đã hoàn thành!</h2>
+    <div class="flowers" id="flowers"></div>
+    <div class="final-score" id="finalScore">Con đã tìm đúng 0/8 từ</div>
+    <p style="font-size:18px;font-weight:800; margin-top:10px;">Cô khen con tinh mắt, nhận biết rất rõ chữ <b>d</b> và <b>đ</b>.</p>
+    <button class="finish-btn" id="restartBtn">Chơi lại</button>
+  </div>
+</section>
+</div>
+
+<script>
+// --- LIÊN KẾT ÂM THANH MỚI NHẤT ---
+// Khai báo sẵn các biến chứa tệp âm thanh
+const sndSpin = new Audio('quay.mp3');
+sndSpin.loop = true; 
+const sndCorrect = new Audio('true.m4a'); // Phát khi trẻ làm đúng
+const sndWrong = new Audio('sai.m4a');    // Phát khi trẻ làm sai
+
+const TARGET_LETTERS = ['d', 'đ', 'D', 'Đ'];
+const WHEEL_SLICES = 8;
+const ITEMS = [
+  { id: 0, type: 'word', name: 'điện thoại', word: 'điện thoại', key: 'dien-thoai', img: 'điện thoại.png' },
+  { id: 1, type: 'word', name: 'quả dừa', word: 'quả dừa', key: 'qua-dua', img: 'dừa.png' },
+  { id: 2, type: 'word', name: 'đậu bắp', word: 'đậu bắp', key: 'dau-bap', img: 'đậu bắp.png' }, 
+  { id: 3, type: 'word', name: 'đồng hồ', word: 'đồng hồ', key: 'dong-ho', img: 'dong ho.png' },
+  { id: 4, type: 'word', name: 'con dê', word: 'con dê', key: 'con-de', img: 'de.png' }, 
+  { id: 5, type: 'word', name: 'con diều', word: 'con diều', key: 'con-dieu', img: 'dieu.png' },
+  { id: 6, type: 'word', name: 'cây đa', word: 'cây đa', key: 'cay-da', img: 'cây đa.png' },
+  { id: 7, type: 'word', name: 'dưa leo', word: 'dưa leo', key: 'dua-chuot', img: 'dưa.png' }
+];
+
+function getSvgEmoji(emoji) {
+  return `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text x='50' y='75' font-size='70' text-anchor='middle'>${emoji}</text></svg>`;
+}
+
+let soundEnabled = true;
+let score = 0;
+let currentRotation = 0;
+let isSpinning = false;
+let playedKeys = []; 
+let totalTargetsInTurn = 0;
+let targetsFoundInTurn = 0;
+let isTurnFailed = false;
+
+// --- TÌM GIỌNG CÔ GIÁO VIỆT NAM (DÙNG CHO FALLBACK) ---
+let preferredVoice = null;
+function initVoice() {
+  const voices = window.speechSynthesis.getVoices();
+  const viVoices = voices.filter(v => v.lang.includes('vi'));
+  preferredVoice = viVoices.find(v => v.name.includes('Google') || v.name.includes('Female') || v.name.includes('HoaiMy')) || viVoices[0];
+}
+if (speechSynthesis.onvoiceschanged !== undefined) {
+  speechSynthesis.onvoiceschanged = initVoice;
+}
+
+// --- MODULE PHÁT ÂM THANH THÔNG MINH (ADAPTIVE AUDIO) ---
+function speak(text) {
+  if (!soundEnabled || !('speechSynthesis' in window)) return;
+  window.speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'vi-VN';
+  if (preferredVoice) u.voice = preferredVoice;
+  u.rate = 0.85;  
+  u.pitch = 1.15; 
+  window.speechSynthesis.speak(u);
+}
+
+// Phát âm thanh file ghi âm đúng. Nếu lỗi file thì tự động dùng giọng AI
+function playCorrectSound() {
+    if(!soundEnabled) return;
+    sndCorrect.currentTime = 0;
+    let playPromise = sndCorrect.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.log("File true.m4a không tìm thấy. Dùng giọng AI thay thế.");
+            speak('Bé giỏi quá!');
+        });
+    }
+}
+
+// Phát âm thanh file ghi âm sai. Nếu lỗi file thì tự động dùng giọng AI
+function playWrongSound() {
+    if(!soundEnabled) return;
+    sndWrong.currentTime = 0;
+    let playPromise = sndWrong.play();
+    if (playPromise !== undefined) {
+        playPromise.catch(error => {
+            console.log("File sai.m4a không tìm thấy. Dùng giọng AI thay thế.");
+            speak('Bé làm lại nhé!');
+        });
+    }
+}
+
+function getImage(key) {
+  const item = ITEMS.find(i => i.key === key);
+  if (item && item.img) return item.img;
+  return getSvgEmoji('❓');
+}
+
+function showScreen(screenId) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+}
+
+// AUDIO UNLOCK: CẤP QUYỀN ÂM THANH CHO iOS KHI VỪA VÀO TRÒ CHƠI
+document.getElementById('startBtn').addEventListener('click', () => {
+  if (soundEnabled) {
+      sndCorrect.play().then(() => sndCorrect.pause()).catch(e=>{});
+      sndWrong.play().then(() => sndWrong.pause()).catch(e=>{});
+      sndSpin.play().then(() => sndSpin.pause()).catch(e=>{});
+      if ('speechSynthesis' in window) {
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance(''));
+      }
+  }
+
+  score = 0;
+  playedKeys = [];
+  document.getElementById('score').textContent = score;
+  showScreen('gameScreen');
+  initVoice();
+  speak("Chúng mình cùng quay vòng quay để tìm chữ dờ và đờ nhé!");
+});
+
+const spinBtn = document.getElementById('spinBtn');
+const wheelEl = document.getElementById('wheel');
+
+spinBtn.addEventListener('click', () => {
+  if (isSpinning) return;
+  
+  if (soundEnabled) {
+      if('speechSynthesis' in window) window.speechSynthesis.resume();
+      sndSpin.currentTime = 0;
+      sndSpin.play().catch(e => console.log("Trình duyệt chặn autoplay nhạc vòng quay"));
+  }
+
+  let unplayedWords = ITEMS.filter(item => item.type === 'word' && !playedKeys.includes(item.key));
+  if (unplayedWords.length === 0) {
+    sndSpin.pause();
+    endGame();
+    return;
+  }
+  
+  isSpinning = true;
+  spinBtn.disabled = true;
+  document.getElementById('nextBtn').classList.add('hidden');
+  document.getElementById('feedback').textContent = '';
+  document.getElementById('feedback').className = 'feedback';
+  document.getElementById('picture').innerHTML = `<div class="missing">đang quay...</div>`;
+  document.getElementById('wordTitle').textContent = '...';
+  document.getElementById('letters').innerHTML = '';
+  document.getElementById('letters').classList.remove('disabled-events'); // Mở khóa khu vực chữ
+  document.getElementById('prompt').textContent = 'Vòng quay đang chạy, cùng chờ xem nhé!';
+
+  let chosenItem = unplayedWords[Math.floor(Math.random() * unplayedWords.length)];
+  let targetIndex = chosenItem.id;
+
+  // TÍNH GÓC QUAY CÓ BÙ TRỪ ĐỂ KIM LUÔN CHỈ VÀO TÂM
+  const sliceAngle = 360 / WHEEL_SLICES;
+  const targetAngle = 360 - (targetIndex * sliceAngle + (sliceAngle / 2)); 
+  const extraSpins = 5 * 360;
+  
+  currentRotation = (Math.floor(currentRotation / 360) * 360) + extraSpins + targetAngle;
+  wheelEl.style.transform = `rotate(${currentRotation}deg)`;
+
+  setTimeout(() => {
+    isSpinning = false;
+    spinBtn.disabled = false;
+    sndSpin.pause(); // Dừng nhạc quay
+    setupChallenge(chosenItem);
+  }, 4500);
+});
+
+function setupChallenge(item) {
+  const picDiv = document.getElementById('picture');
+  picDiv.innerHTML = `<img src="${getImage(item.key)}" alt="${item.name}" onerror="this.onerror=null; this.src=getSvgEmoji('❓');">`;
+
+  playedKeys.push(item.key);
+  document.getElementById('stageText').textContent = `Bé hãy tìm chữ d hoặc đ trong từ: "${item.name}"`;
+  document.getElementById('wordTitle').textContent = item.word;
+  document.getElementById('prompt').innerHTML = `chạm vào đúng các chữ <b>d</b> hoặc <b>đ</b> ở dưới nhé!`;
+
+  const lettersDiv = document.getElementById('letters');
+  lettersDiv.innerHTML = '';
+  
+  const chars = Array.from(item.word);
+  totalTargetsInTurn = chars.filter(c => TARGET_LETTERS.includes(c.toLowerCase())).length;
+  targetsFoundInTurn = 0;
+  isTurnFailed = false; // Đặt lại cờ lỗi mỗi khi bắt đầu câu mới
+
+  chars.forEach((char) => {
+    const btn = document.createElement('button');
+    if (char === ' ') {
+      btn.className = 'letter space';
+    } else {
+      btn.className = 'letter';
+      btn.textContent = char;
+      btn.addEventListener('click', () => handleLetterClick(btn, char));
+    }
+    lettersDiv.appendChild(btn);
+  });
+
+  speak(`Bé hãy tìm chữ dờ hoặc đờ trong từ ${item.name}`);
+}
+
+function handleLetterClick(btn, char) {
+  if (btn.classList.contains('correct') || btn.classList.contains('wrong') || isTurnFailed) return;
+
+  if (TARGET_LETTERS.includes(char.toLowerCase())) {
+    btn.classList.add('correct');
+    targetsFoundInTurn++;
+    
+    const fb = document.getElementById('feedback');
+    
+    if (targetsFoundInTurn < totalTargetsInTurn) {
+      fb.textContent = 'Giỏi quá! Hình như vẫn còn chữ nữa, con tìm tiếp nhé!';
+      fb.className = 'feedback good';
+      playCorrectSound(); // Chạy âm thanh đúng (fallback nếu không có m4a)
+    } else {
+      // HOÀN THÀNH TỐT
+      score++;
+      document.getElementById('score').textContent = score;
+      
+      fb.textContent = 'Hoàn hảo! Con đã tìm đúng chữ d và đ trong từ này!';
+      fb.className = 'feedback good';
+      
+      playCorrectSound(); 
+      document.getElementById('letters').classList.add('disabled-events');
+      showNextButtonCheck();
+    }
+  } else {
+    // LUẬT MỚI: SAI LÀ MẤT ĐIỂM, KHÓA BẢNG CHỮ CÁI, VÀ HIỆN NÚT CHUYỂN CÂU
+    btn.classList.add('wrong');
+    isTurnFailed = true; 
+    
+    const fb = document.getElementById('feedback');
+    fb.textContent = 'Ồ, sai rồi! Con không được cộng điểm ở câu này. Bấm quay tiếp nhé.';
+    fb.className = 'feedback help';
+    
+    playWrongSound(); 
+    
+    document.getElementById('letters').classList.add('disabled-events');
+    showNextButtonCheck();
+  }
+}
+
+function showNextButtonCheck() {
+  let unplayedWords = ITEMS.filter(item => item.type === 'word' && !playedKeys.includes(item.key));
+  if (unplayedWords.length === 0) {
+    document.getElementById('nextBtn').textContent = 'xem kết quả';
+  } else {
+    document.getElementById('nextBtn').textContent = 'quay tiếp';
+  }
+  document.getElementById('nextBtn').classList.remove('hidden');
+}
+
+document.getElementById('nextBtn').addEventListener('click', () => {
+  let unplayedWords = ITEMS.filter(item => item.type === 'word' && !playedKeys.includes(item.key));
+  if (unplayedWords.length === 0) {
+    endGame();
+  } else {
+    document.getElementById('nextBtn').classList.add('hidden');
+    document.getElementById('picture').innerHTML = `<div class="missing">🌻 sẵn sàng chưa nào?</div>`;
+    document.getElementById('wordTitle').textContent = 'Tiếp tục nhé!';
+    document.getElementById('prompt').textContent = 'Chạm nút "QUAY" để chọn hình tiếp theo.';
+    document.getElementById('letters').innerHTML = '';
+    document.getElementById('feedback').textContent = '';
+    document.getElementById('stageText').textContent = 'Bước 1: Quan sát hình';
+  }
+});
+
+function endGame() {
+  showScreen('finalScreen');
+  document.getElementById('finalScore').textContent = `Con đã tìm đúng ${score}/8 từ`;
+  const flowersDiv = document.getElementById('flowers');
+  flowersDiv.innerHTML = '';
+  
+  // TẠO EMOJI HOA THEO ĐIỂM SỐ ĐẠT ĐƯỢC
+  let displayScore = score > 8 ? 8 : score; 
+  for (let i = 0; i < displayScore; i++) {
+    const fl = document.createElement('div');
+    fl.className = 'flower-emoji';
+    fl.textContent = '🌸'; 
+    fl.style.animationDelay = `${i * 0.15}s`;
+    flowersDiv.appendChild(fl);
+  }
+  
+  if (score >= 6) {
+      speak(`Tuyệt vời! Bé xuất sắc giành được ${score} bông hoa!`);
+  } else {
+      speak(`Bé đạt được ${score} bông hoa. Lần sau cố gắng cẩn thận hơn nhé!`);
+  }
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  score = 0;
+  playedKeys = [];
+  document.getElementById('score').textContent = score;
+  showScreen('welcomeScreen');
+});
+
+const soundBtn = document.getElementById('soundBtn');
+soundBtn.addEventListener('click', () => {
+  soundEnabled = !soundEnabled;
+  soundBtn.textContent = soundEnabled ? 'Giọng cô & Âm thanh: BẬT' : 'Giọng cô & Âm thanh: TẮT';
+  if (!soundEnabled) {
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      sndSpin.pause();
+  }
+});
+
+// Khởi chạy
+initVoice();
+</script>
+</body>
+</html>
